@@ -34,6 +34,30 @@ class AlbumViewController: UIViewController {
         showMaplocation(pin)
     }
     
+    // MARK: - Actions
+    @IBAction func reFetchAlbum(_ sender: Any) {
+        self.photos = [Photo]()
+        self.photosResponse = [PhotoResponse]()
+        let fetchRequest: NSFetchRequest<Photo> = Photo.fetchRequest()
+        let predicate = NSPredicate(format: "pin == %@", pin!)
+        fetchRequest.predicate = predicate
+        do {
+            let photos = try DataController.context.fetch(fetchRequest)
+            for photo in photos {
+                DataController.context.delete(photo)
+                DataController.saveContext()
+            }
+            DispatchQueue.main.async {
+                self.collectionView.reloadData()
+            }
+            fetchPhotos()
+        } catch {
+            let nerror = error as NSError
+            fatalError("DataController error \(nerror.localizedDescription)")
+        }
+    }
+    
+    
     // MARK: - Helpers
     fileprivate func showMaplocation(_ pin: Pin?) {
         guard let point = pin else {
@@ -156,4 +180,12 @@ extension AlbumViewController: MKMapViewDelegate, UICollectionViewDataSource, UI
         
         return cell
     }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let photo = photos[indexPath.item]
+        photos.remove(at: indexPath.item)
+        DataController.context.delete(photo)
+        DataController.saveContext()
+        collectionView.deleteItems(at: [indexPath])
+     }
 }

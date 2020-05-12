@@ -130,7 +130,13 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="xRb-sf-D7j"/>
                     </view>
-                    <navigationItem key="navigationItem" id="M4Q-3t-Jwm"/>
+                    <navigationItem key="navigationItem" id="M4Q-3t-Jwm">
+                        <barButtonItem key="rightBarButtonItem" title="Update Album" id="OcZ-0W-7ev">
+                            <connections>
+                                <action selector="reFetchAlbum:" destination="ZFd-Fo-OZY" id="Ogx-6P-ffV"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
                         <outlet property="collectionView" destination="zES-DZ-HG5" id="p0t-W5-MpT"/>
                         <outlet property="mapView" destination="7ES-DV-J7q" id="KNV-Ll-iE6"/>
