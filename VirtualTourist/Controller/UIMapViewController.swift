@@ -20,11 +20,12 @@ class UIMapViewController: UIViewController {
     var editMode: Bool = false
     var annotation: MKPointAnnotation?
     var pins = [Pin]()
+    let dataController = DataController.shared
     
     // MARK: - UIViewController lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         fetchPinsFromCoreData()
         loadPins(pins)
     }
@@ -41,10 +42,10 @@ class UIMapViewController: UIViewController {
             } else if sender.state == .changed {
                 annotation!.coordinate = coordinates
             } else if sender.state == .ended {
-                let pin = Pin(context: DataController.context)
+                let pin = Pin(context: dataController.context)
                 pin.latitude = String(annotation!.coordinate.latitude)
                 pin.longitude = String(annotation!.coordinate.longitude)
-                DataController.saveContext()
+                dataController.saveContext()
                 pins.append(pin)
             }
         }
@@ -76,7 +77,7 @@ class UIMapViewController: UIViewController {
     fileprivate func fetchPinsFromCoreData() {
         let fetchRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
         do {
-            let pins = try DataController.context.fetch(fetchRequest)
+            let pins = try dataController.context.fetch(fetchRequest)
             self.pins = pins
         } catch {
             let nerror = error as NSError
@@ -89,7 +90,6 @@ class UIMapViewController: UIViewController {
             let latitude = Double(pin.latitude!)!
             let longitude = Double(pin.longitude!)!
             let annotation = MKPointAnnotation()
-            //annotation.coordinate = CLLocationCoordinate2D(latitude: CLLocationDegrees(latitude),longitude: CLLocationDegrees(longitude))
             annotation.coordinate = CLLocationCoordinate2DMake(latitude, longitude)
             mapView.addAnnotation(annotation)
         }
@@ -125,8 +125,8 @@ extension UIMapViewController: MKMapViewDelegate {
             if pin.latitude == latitude && pin.longitude == longitude {
                 if editMode {
                     pins.remove(at: position)
-                    DataController.context.delete(pin)
-                    DataController.saveContext()
+                    dataController.context.delete(pin)
+                    dataController.saveContext()
                     mapView.removeAnnotation(annotation)
                     return
                 } else {
@@ -143,13 +143,13 @@ extension UIMapViewController: MKMapViewDelegate {
             return
         }
         if control == view.rightCalloutAccessoryView {
-              var position = 0
+            var position = 0
             for pin in pins {
                 if pin.latitude == String(annotation.coordinate.latitude) && pin.longitude == String(annotation.coordinate.longitude) {
                     if editMode {
                         pins.remove(at: position)
-                        DataController.context.delete(pin)
-                        DataController.saveContext()
+                        dataController.context.delete(pin)
+                        dataController.saveContext()
                         mapView.removeAnnotation(annotation)
                     } else {
                         mapView.deselectAnnotation(annotation, animated: true)

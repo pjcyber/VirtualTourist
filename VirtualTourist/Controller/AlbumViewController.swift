@@ -17,11 +17,11 @@ class AlbumViewController: UIViewController {
     @IBOutlet weak var collectionView: UICollectionView!
     
     // MARK: - Variables
-    var dataController: DataController!
     var pin: Pin!
     var photos = [Photo]()
     var photosResponse = [PhotoResponse]()
     let photosCount = 60
+    let dataController = DataController.shared
     
     // MARK: - UIViewController lifecycle
     override func viewDidLoad() {
@@ -42,10 +42,10 @@ class AlbumViewController: UIViewController {
         let predicate = NSPredicate(format: "pin == %@", pin!)
         fetchRequest.predicate = predicate
         do {
-            let photos = try DataController.context.fetch(fetchRequest)
+            let photos = try dataController.context.fetch(fetchRequest)
             for photo in photos {
-                DataController.context.delete(photo)
-                DataController.saveContext()
+                dataController.context.delete(photo)
+                dataController.saveContext()
             }
             DispatchQueue.main.async {
                 self.collectionView.reloadData()
@@ -84,7 +84,7 @@ class AlbumViewController: UIViewController {
         let predicate = NSPredicate(format: "pin == %@", pin!)
         fetchRequest.predicate = predicate
         do {
-            let photos = try DataController.context.fetch(fetchRequest)
+            let photos = try dataController.context.fetch(fetchRequest)
             if photos.isEmpty {
                 fetchPhotos()
             } else {
@@ -156,11 +156,11 @@ extension AlbumViewController: MKMapViewDelegate, UICollectionViewDataSource, UI
             let photoResponse =  photosResponse[indexPath.item]
             FlickrClient.downloadImage(photo: photoResponse) { (url, data, error) in
                 if let data = data, error == nil {
-                    let photo = Photo(context: DataController.context)
+                    let photo = Photo(context: self.dataController.context)
                     photo.pin = self.pin
                     photo.url = url
                     photo.image = data
-                    DataController.saveContext()
+                    self.dataController.saveContext()
                     self.photos.append(photo)
                     DispatchQueue.main.async {
                         cell.progressBar.stopAnimating()
@@ -184,8 +184,8 @@ extension AlbumViewController: MKMapViewDelegate, UICollectionViewDataSource, UI
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let photo = photos[indexPath.item]
         photos.remove(at: indexPath.item)
-        DataController.context.delete(photo)
-        DataController.saveContext()
+        dataController.context.delete(photo)
+        dataController.saveContext()
         collectionView.deleteItems(at: [indexPath])
-     }
+    }
 }

@@ -10,6 +10,9 @@ import Foundation
 
 class  FlickrClient {
     
+    static var totalPages: Int?
+    static let photosPerPage: Int = 60
+    
     enum Endpoints {
         
         static let key = "f75c81468aed91ba84e2d8c86268ec4d"
@@ -17,10 +20,18 @@ class  FlickrClient {
         case album(String, String, String)
         case image(String, String, String, String)
         
+        var page: Int {
+            if let totalPages = totalPages {
+                let page = min(totalPages, 4000/photosPerPage)
+                return Int(arc4random_uniform(UInt32(page)) + 1)
+            }
+            return 1
+        }
+        
         var stringValue: String {
             switch self {
             case .album(let latitude, let longitude, let count):
-                return "https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=\(Endpoints.key)&format=json&lat=\(latitude)&lon=\(longitude)&per_page=\(count)&page=1"
+                return "https://www.flickr.com/services/rest/?method=flickr.photos.search&api_key=\(Endpoints.key)&format=json&lat=\(latitude)&lon=\(longitude)&per_page=\(count)&page=\(page)"
             case .image(let farm, let server, let photoId, let secret):
                 return "https://farm\(farm).staticflickr.com/\(server)/\(photoId)_\(secret).jpg"
             }
@@ -70,6 +81,7 @@ class  FlickrClient {
     class func fethAlbum(pin: Pin!, count: String, completion: @escaping ([PhotoResponse], Error?) -> Void) {
         _ = taskForGETRequest(url: Endpoints.album(pin.latitude!, pin.longitude!, count).url, responseType: Album.self) { response, error in
             if let response = response {
+                totalPages = response.photos.pages
                 completion(response.photos.photo, nil)
             } else {
                 completion([], error)
